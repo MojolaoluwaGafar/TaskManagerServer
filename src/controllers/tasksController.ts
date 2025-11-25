@@ -1,81 +1,93 @@
-const TaskModel = require("../models/taskModel");
-const pool = require("../db");
+import { Request, Response } from "express";
+import * as TaskModel from "../models/taskModel";
 
-const getTasks = async (req, res) => {
+interface TaskRequest extends Request {
+  body: {
+    title?: string;
+    description?: string;
+    priority?: string;
+    dueDate?: string;
+    completed?: boolean;
+  };
+}
+
+// GET /api/tasks
+export const getTasks = async (_req: Request, res: Response) => {
   try {
     const tasks = await TaskModel.getAllTasks();
     res.json(tasks);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
 
-const addTask = async (req, res) => {
+// POST /api/tasks
+export const addTask = async (req: TaskRequest, res: Response) => {
   try {
-    const { title } = req.body;
-    const task = await TaskModel.createTask(title);
+    const { title, description, priority, dueDate } = req.body;
+    if (!title) return res.status(400).json({ error: "Title is required" });
+
+    const task = await TaskModel.createTask(title, description, priority, dueDate);
+    res.status(201).json(task);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// PATCH /api/tasks/:id
+export const updateTask = async (req: TaskRequest, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid task ID" });
+
+    const { completed, title, description, priority, dueDate } = req.body;
+    const task = await TaskModel.updateTask(id, completed, title, description, priority, dueDate);
+
+    if (!task) return res.status(404).json({ error: "Task not found" });
+
     res.json(task);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
 
-const updateTask = async (req, res) => {
+// DELETE /api/tasks/:id
+export const removeTask = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const { completed, title } = req.body;
-    const task = await TaskModel.updateTask(id, completed, title);
-    res.json(task);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid task ID" });
 
-const removeTask = async (req, res) => {
-  try {
-    const { id } = req.params;
     const success = await TaskModel.deleteTask(id);
     res.json({ success });
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
 
-const searchTasks = async (req, res) => {
+// GET /api/tasks/search?q=...
+export const searchTasks = async (req: Request, res: Response) => {
   try {
-    const { q } = req.query;
-    if (!q || q.trim() === "") {
-      return res.json([]);
-    }
+    const q = (req.query.q as string) || "";
+    if (!q.trim()) return res.json([]);
 
     const tasks = await TaskModel.searchTasks(q);
     res.json(tasks);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
 
-const getTaskById = async (req, res) => {
+// GET /api/tasks/:id
+export const getTaskById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const task = await TaskModel.getTaskById(id);
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid task ID" });
 
-    if (!task) {
-      return res.status(404).json({ error: "Task not found" });
-    }
+    const task = await TaskModel.getTaskById(id);
+    if (!task) return res.status(404).json({ error: "Task not found" });
 
     res.json(task);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
-};
-
-
-module.exports = {
-  getTasks,
-  addTask,
-  updateTask,
-  removeTask,
-  searchTasks,
-  getTaskById
 };

@@ -1,12 +1,13 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const taskRoutes = require("./routes/tasks");
-const userRoutes = require("./routes/user");
+import express, { Application } from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import taskRoutes from "./routes/tasks";
+import userRoutes from "./routes/user";
 
 dotenv.config();
 
-const app = express();
+const app: Application = express();
+
 app.use(cors());
 app.use(express.json());
 

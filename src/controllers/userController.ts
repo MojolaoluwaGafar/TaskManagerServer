@@ -1,33 +1,52 @@
-const pool = require("../db");
-const { createUser, findUserByEmail, findUserById } = require("../models/userModel");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+import { Request, Response } from "express";
+import { createUser, findUserByEmail, findUserById } from "../models/userModel";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret123";
 
-const signUp = async (req, res) => {
+interface AuthRequest extends Request {
+  userId?: string;
+  body: {
+    name?: string;
+    email?: string;
+    password?: string;
+  };
+}
+
+// Sign Up
+export const signUp = async (req: AuthRequest, res: Response) => {
   try {
     const { name, email, password } = req.body;
-    
+    if (!name || !email || !password)
+      return res.status(400).json({ error: "All fields are required" });
 
     const existingUser = await findUserByEmail(email);
-    if (existingUser) return res.status(400).json({ error: "User already exists" });
+    if (existingUser)
+      return res.status(400).json({ error: "User already exists" });
 
     const user = await createUser(name, email, password);
-    console.log(user);
-    
-
-    res.status(201).json(user);
-  } catch (err) {
+    res.status(201).json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      created_at: user.created_at,
+    });
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
 
-const signIn = async (req, res) => {
+// Sign In
+export const signIn = async (req: AuthRequest, res: Response) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ error: "Email and password are required" });
+
     const user = await findUserByEmail(email);
-    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    if (!user || !user.password)
+      return res.status(400).json({ error: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
@@ -40,27 +59,27 @@ const signIn = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        avatar: null,
       },
     });
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
 
-
-const getProfile = async (req, res) => {
+// Get Profile
+export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const user = await findUserById(req.userId);
+    if (!req.userId) return res.status(401).json({ error: "Unauthorized" });
+
+    const userIdNum = Number(req.userId);
+    if (isNaN(userIdNum))
+      return res.status(400).json({ error: "Invalid user ID" });
+
+    const user = await findUserById(userIdNum);
     if (!user) return res.status(404).json({ error: "User not found" });
+
     res.json(user);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
-};
-
-module.exports = {
-  signUp,
-  signIn,
-  getProfile,
 };
