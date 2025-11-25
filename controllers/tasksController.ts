@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import * as TaskModel from "../models/taskModel";
 
 interface TaskRequest extends Request {
+  userId?: number;
   body: {
     title?: string;
     description?: string;
@@ -27,7 +28,9 @@ export const addTask = async (req: TaskRequest, res: Response) => {
     const { title, description, priority, dueDate } = req.body;
     if (!title) return res.status(400).json({ error: "Title is required" });
 
-    const task = await TaskModel.createTask(title, description, priority, dueDate);
+    const userId = Number(req.userId);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const task = await TaskModel.createTask(userId,title, description, priority, dueDate);
     res.status(201).json(task);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

@@ -16,16 +16,17 @@ export const getAllTasks = async (): Promise<Task[]> => {
 };
 
 export const createTask = async (
+  userId: number,
   title: string,
   description?: string,
   priority?: string,
   dueDate?: string
 ): Promise<Task> => {
   const res = await pool.query(
-    `INSERT INTO tasks (title, completed, description, priority, due_date)
-     VALUES ($1, false, $2, $3, $4)
+    `INSERT INTO tasks (user_id, title, completed, description, priority, due_date)
+     VALUES ($1, $2, false, $3, $4, $5)
      RETURNING *`,
-    [title, description, priority, dueDate]
+    [userId, title, description, priority, dueDate]
   );
   return res.rows[0];
 };

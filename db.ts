@@ -19,6 +19,7 @@ const pool = new Pool(
         port: Number(process.env.DB_PORT),
       }
 );
+console.log(process.env.DB_NAME);
 
 export const query = (text: string, params?: any[]) => pool.query(text, params);
 
