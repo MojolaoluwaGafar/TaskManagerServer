@@ -26,6 +26,7 @@ export const signUp = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: "User already exists" });
 
     const user = await createUser(name, email, password);
+    console.log(user)
     res.status(201).json({
       id: user.id,
       name: user.name,
