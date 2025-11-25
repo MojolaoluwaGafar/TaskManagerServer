@@ -62,6 +62,7 @@ export const signIn = async (req: AuthRequest, res: Response) => {
       },
     });
   } catch (err: any) {
+    console.error(err)
     res.status(500).json({ error: err.message });
   }
 };
