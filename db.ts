@@ -27,3 +27,22 @@ pool.query("SELECT NOW()")
   .catch(err => console.error("❌ Database connection error:", err));
 
 export default pool;
+
+
+// import { Pool } from "pg";
+// import dotenv from "dotenv";
+
+// dotenv.config();
+
+// const pool = new Pool({
+//   connectionString: process.env.DATABASE_URL,
+//   ssl: { rejectUnauthorized: false }, 
+// });
+
+// export const query = (text: string, params?: any[]) => pool.query(text, params);
+
+// pool.query("SELECT NOW()")
+//   .then(res => console.log("🔥 PostgreSQL connected successfully at", res.rows[0].now))
+//   .catch(err => console.error("❌ Database connection error:", err));
+
+// export default pool;
